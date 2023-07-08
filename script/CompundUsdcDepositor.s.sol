@@ -2,13 +2,13 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {Swapper} from "src/Swapper.sol";
+import {CompundUsdcDepositor} from "src/CompundUsdcDepositor.sol";
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "forge-std/console.sol";
 
 import {CometInterface} from "lib/comet/contracts/CometInterface.sol";
 
-contract DeploySwapperScript is Script {
+contract DeployCompundUsdcDepositor is Script {
     function setUp() public {}
 
     function run() public {
@@ -19,7 +19,10 @@ contract DeploySwapperScript is Script {
 
         vm.startBroadcast(priv_key);
 
-        Swapper instance = new Swapper(usdcAddress, cUsdcAddress);
+        CompundUsdcDepositor instance = new CompundUsdcDepositor(
+            usdcAddress,
+            cUsdcAddress
+        );
 
         console.log("SWAPPER INSTANCE IS", address(instance));
 

@@ -4,8 +4,9 @@ pragma solidity ^0.8.13;
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {CometInterface} from "lib/comet/contracts/CometInterface.sol";
 import "forge-std/console.sol";
+import {Errors} from "src/libs/Errors.sol";
 
-contract Swapper {
+contract CompundUsdcDepositor {
     uint256 public number;
     CometInterface cUSDC;
     IERC20 uSDC;
@@ -26,14 +27,18 @@ contract Swapper {
         uint256 approvedAmount = uSDC.allowance(msg.sender, address(this));
 
         if (approvedAmount < amount) {
-            revert("User did not approve enough allowance for this contract");
+            revert Errors.NotEnoughAllowanceApproved();
         }
 
         // Deposit `msg.sender` USDC into this contract account.
-        bool checkTransfer = uSDC.transferFrom(msg.sender, address(this), amount);
+        bool checkTransfer = uSDC.transferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
 
         if (!checkTransfer) {
-            revert("USDC transfer from User account to Contract failed");
+            revert Errors.UsdcTransferFailed();
         }
 
         // Approve the cUSDC contract to transfer USDC to the compound protocol contract.
@@ -61,20 +66,29 @@ contract Swapper {
         uint256 finalUsdcBalance = uSDC.balanceOf(address(this));
 
         if (finalUsdcBalance != initialUsdcBalance) {
-            revert("Final Usdc balance and initial usdc balance should be equal");
+            revert(
+                "Final Usdc balance and initial usdc balance should be equal"
+            );
         }
 
         uint256 finalCUsdcBalance = cUSDC.balanceOf(address(this));
 
         if (finalCUsdcBalance != initialCUsdcBalance) {
-            revert("Final cUSDC balance and initial USDC balance should be equal");
+            revert(
+                "Final cUSDC balance and initial USDC balance should be equal"
+            );
         }
     }
 
     function withdraw(uint256 amount) external {
         uint256 balance = cUSDC.balanceOf(address(this));
 
-        console.log("CONTRACT cUSDC BALANCE IS", balance, "USDC BALANCE IS", uSDC.balanceOf(address(this)));
+        console.log(
+            "CONTRACT cUSDC BALANCE IS",
+            balance,
+            "USDC BALANCE IS",
+            uSDC.balanceOf(address(this))
+        );
 
         cUSDC.withdraw(address(uSDC), amount);
 
@@ -82,7 +96,12 @@ contract Swapper {
 
         uint256 usdcBalance = uSDC.balanceOf(address(this));
 
-        console.log("CONTRACT USDC BALANCE IS", usdcBalance, "cUSDC BALANCE IS", cUSDC.balanceOf(address(this)));
+        console.log(
+            "CONTRACT USDC BALANCE IS",
+            usdcBalance,
+            "cUSDC BALANCE IS",
+            cUSDC.balanceOf(address(this))
+        );
 
         bool check = uSDC.transfer(msg.sender, usdcBalance);
 
