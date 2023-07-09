@@ -9,12 +9,14 @@ import {CometMainInterface} from "lib/comet/contracts/CometInterface.sol";
 import {ERC20Mock} from "test/mocks/ERC20Mock.sol";
 import {CTokenMock} from "test/mocks/cTokenMock.sol";
 
-contract CompoundDepositorDepositTests is BaseTest {
+contract BaseCompoundDepositorTests is BaseTest {
     CompoundUsdcDepositor instance;
-    address usdcContractAddress;
-    address compoundUsdcContractAddres;
+    address instanceAddress;
     ERC20Mock usdcContractMock;
+    address usdcContractAddress;
     CTokenMock cUsdcContractMock;
+    address compoundUsdcContractAddres;
+    address senderAddress;
 
     function setUp() public {
         usdcContractMock = new ERC20Mock();
@@ -26,8 +28,12 @@ contract CompoundDepositorDepositTests is BaseTest {
             usdcContractAddress,
             compoundUsdcContractAddres
         );
+        instanceAddress = address(instance);
+        senderAddress = address(this);
     }
+}
 
+contract CompoundDepositorDepositTests is BaseCompoundDepositorTests {
     function testCannotDepositIfUserDidNotSetUsdcAllowance(
         uint256 amount
     ) external {
@@ -38,7 +44,7 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance)
         );
 
@@ -57,14 +63,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             false
@@ -83,14 +89,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             true
@@ -118,14 +124,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             true
@@ -159,14 +165,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             true
@@ -215,14 +221,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             true
@@ -257,7 +263,7 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
@@ -294,14 +300,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             true
@@ -338,14 +344,14 @@ contract CompoundDepositorDepositTests is BaseTest {
 
         mockERC20AllowanceCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             usdcContractAddress,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             true
@@ -371,22 +377,22 @@ contract CompoundDepositorDepositTests is BaseTest {
     }
 }
 
-contract CompoundDepositorWithDrawTests is BaseTest {
-    CompoundUsdcDepositor instance;
-    address usdcContractAddress;
-    address compoundUsdcContractAddres;
-    ERC20Mock usdcContractMock;
-    CTokenMock cUsdcContractMock;
-
-    function setUp() public {
-        usdcContractMock = new ERC20Mock();
-        cUsdcContractMock = new CTokenMock();
-        usdcContractAddress = address(usdcContractMock);
-        compoundUsdcContractAddres = address(cUsdcContractMock);
-
-        instance = new CompoundUsdcDepositor(
-            usdcContractAddress,
-            compoundUsdcContractAddres
+contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
+    function _setCUsdcMappingValue(address account, uint256 amount) internal {
+        writeToStorage(
+            address(instance),
+            bytes32(
+                keccak256(
+                    abi.encode(
+                        // Mapping Key
+                        account,
+                        // Storage Slot of the mapping
+                        3
+                    )
+                )
+            ),
+            bytes32(amount),
+            0
         );
     }
 
@@ -405,21 +411,7 @@ contract CompoundDepositorWithDrawTests is BaseTest {
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        writeToStorage(
-            address(instance),
-            bytes32(
-                keccak256(
-                    abi.encode(
-                        // Mapping Key
-                        address(this),
-                        // Storage Slot of the mapping
-                        3
-                    )
-                )
-            ),
-            bytes32(amount),
-            0
-        );
+        _setCUsdcMappingValue(senderAddress, amount);
 
         vm.expectRevert(Errors.NotEnoughAllowanceApproved.selector);
 
@@ -431,32 +423,18 @@ contract CompoundDepositorWithDrawTests is BaseTest {
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        writeToStorage(
-            address(instance),
-            bytes32(
-                keccak256(
-                    abi.encode(
-                        // Mapping Key
-                        address(this),
-                        // Storage Slot of the mapping
-                        3
-                    )
-                )
-            ),
-            bytes32(amount),
-            0
-        );
+        _setCUsdcMappingValue(senderAddress, amount);
 
         mockERC20AllowanceCall(
             compoundUsdcContractAddres,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
 
         mockERC20TransferFromCall(
             compoundUsdcContractAddres,
-            address(this),
+            senderAddress,
             address(instance),
             amount,
             false
@@ -472,25 +450,11 @@ contract CompoundDepositorWithDrawTests is BaseTest {
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        writeToStorage(
-            address(instance),
-            bytes32(
-                keccak256(
-                    abi.encode(
-                        // Mapping Key
-                        address(this),
-                        // Storage Slot of the mapping
-                        3
-                    )
-                )
-            ),
-            bytes32(amount),
-            0
-        );
+        _setCUsdcMappingValue(senderAddress, amount);
 
         mockERC20AllowanceCall(
             compoundUsdcContractAddres,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
@@ -505,25 +469,11 @@ contract CompoundDepositorWithDrawTests is BaseTest {
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        writeToStorage(
-            address(instance),
-            bytes32(
-                keccak256(
-                    abi.encode(
-                        // Mapping Key
-                        address(this),
-                        // Storage Slot of the mapping
-                        3
-                    )
-                )
-            ),
-            bytes32(amount),
-            0
-        );
+        _setCUsdcMappingValue(senderAddress, amount);
 
         mockERC20AllowanceCall(
             compoundUsdcContractAddres,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
@@ -541,25 +491,11 @@ contract CompoundDepositorWithDrawTests is BaseTest {
     // ) external {
     //     amount = bound(amount, 1, type(uint256).max);
 
-    //     writeToStorage(
-    //         address(instance),
-    //         bytes32(
-    //             keccak256(
-    //                 abi.encode(
-    //                     // Mapping Key
-    //                     address(this),
-    //                     // Storage Slot of the mapping
-    //                     3
-    //                 )
-    //             )
-    //         ),
-    //         bytes32(amount),
-    //         0
-    //     );
+    //     _setCUsdcMappingValue(senderAddress, amount);
 
     //     mockERC20AllowanceCall(
     //         compoundUsdcContractAddres,
-    //         address(this),
+    //         senderAddress,
     //         address(instance),
     //         amount
     //     );
@@ -574,25 +510,11 @@ contract CompoundDepositorWithDrawTests is BaseTest {
     function testWithdraw(uint256 amount) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        writeToStorage(
-            address(instance),
-            bytes32(
-                keccak256(
-                    abi.encode(
-                        // Mapping Key
-                        address(this),
-                        // Storage Slot of the mapping
-                        3
-                    )
-                )
-            ),
-            bytes32(amount),
-            0
-        );
+        _setCUsdcMappingValue(senderAddress, amount);
 
         mockERC20AllowanceCall(
             compoundUsdcContractAddres,
-            address(this),
+            senderAddress,
             address(instance),
             amount
         );
@@ -602,7 +524,7 @@ contract CompoundDepositorWithDrawTests is BaseTest {
 
         instance.withdraw(amount);
 
-        uint256 finalBalance = instance.balanceOf(address(this));
+        uint256 finalBalance = instance.balanceOf(senderAddress);
 
         assertEq(finalBalance, 0);
     }
