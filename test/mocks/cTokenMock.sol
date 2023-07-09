@@ -8,4 +8,10 @@ contract CTokenMock is ERC20Mock {
     function supply(address, uint256) external {
         _maybeUpdateBalance();
     }
+
+    function withdrawTo(address, address, uint256) external {
+        if (resetBalanceAfterTransfer) {
+            balanceReturnValue = 0;
+        }
+    }
 }
