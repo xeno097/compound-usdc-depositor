@@ -10,6 +10,7 @@ contract CompundUsdcDepositor {
     uint256 public number;
     CometInterface cUSDC;
     IERC20 uSDC;
+    mapping(address => uint256) cUsdcPerAddress;
 
     constructor(address _usdc, address _cUcdc) {
         uSDC = IERC20(_usdc);
@@ -47,23 +48,23 @@ contract CompundUsdcDepositor {
         // Deposit `amount` USDC into the compound protocol to receive cUSDC.
         cUSDC.supply(address(uSDC), amount);
 
-        // TODO: implement ERC20 mock to test this behaviour
-        // // Resettting usdc approval for this contract.
-        // ok = uSDC.approve(address(cUSDC), 0);
+        // Resettting usdc approval for this contract.
+        ok = uSDC.approve(address(cUSDC), 0);
 
-        // if (!ok) {
-        //     revert Errors.CUsdcApprovalFailed();
-        // }
+        if (!ok) {
+            revert Errors.CUsdcApprovalResetFailed();
+        }
 
         uint256 newCUsdcBalance = cUSDC.balanceOf(address(this));
 
-        // TODO: implement ERC20 mock to test this behaviour
-        // if (newCUsdcBalance <= initialCUsdcBalance) {
-        //     revert Errors.InvalidState();
-        // }
+        if (newCUsdcBalance <= initialCUsdcBalance) {
+            revert Errors.InvalidState();
+        }
 
+        // TODO check if there is any way to know before hand how many cTokens the user will receive
         // Calculate how many cUSDC we received from the protocol.
         uint256 cUsdcAmountToTransfer = newCUsdcBalance - initialCUsdcBalance;
+        cUsdcPerAddress[msg.sender] += cUsdcAmountToTransfer;
 
         ok = cUSDC.transfer(msg.sender, cUsdcAmountToTransfer);
 
