@@ -107,4 +107,15 @@ contract BaseTest is Test {
             abi.encode(ret)
         );
     }
+
+    // Storage
+    function writeToStorage(
+        address target,
+        bytes32 sslot,
+        bytes32 value,
+        uint256 offset
+    ) internal {
+        bytes32 storageSlot = bytes32(uint256(sslot) + offset);
+        vm.store(target, storageSlot, value);
+    }
 }
