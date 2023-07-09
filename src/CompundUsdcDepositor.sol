@@ -31,52 +31,67 @@ contract CompundUsdcDepositor {
         }
 
         // Deposit `msg.sender` USDC into this contract account.
-        bool checkTransfer = uSDC.transferFrom(
-            msg.sender,
-            address(this),
-            amount
-        );
+        bool ok = uSDC.transferFrom(msg.sender, address(this), amount);
 
-        if (!checkTransfer) {
+        if (!ok) {
             revert Errors.UsdcTransferFailed();
         }
 
         // Approve the cUSDC contract to transfer USDC to the compound protocol contract.
-        bool check = uSDC.approve(address(cUSDC), amount);
+        ok = uSDC.approve(address(cUSDC), amount);
 
-        if (!check) {
-            revert("Failed approval");
+        if (!ok) {
+            revert Errors.CUsdcApprovalFailed();
         }
 
         // Deposit `amount` USDC into the compound protocol to receive cUSDC.
         cUSDC.supply(address(uSDC), amount);
 
+        // TODO: implement ERC20 mock to test this behaviour
+        // // Resettting usdc approval for this contract.
+        // ok = uSDC.approve(address(cUSDC), 0);
+
+        // if (!ok) {
+        //     revert Errors.CUsdcApprovalFailed();
+        // }
+
         uint256 newCUsdcBalance = cUSDC.balanceOf(address(this));
 
+        // TODO: implement ERC20 mock to test this behaviour
+        // if (newCUsdcBalance <= initialCUsdcBalance) {
+        //     revert Errors.InvalidState();
+        // }
+
         // Calculate how many cUSDC we received from the protocol.
-        uint256 dep = newCUsdcBalance - initialCUsdcBalance;
+        uint256 cUsdcAmountToTransfer = newCUsdcBalance - initialCUsdcBalance;
 
-        checkTransfer = cUSDC.transfer(msg.sender, dep);
+        ok = cUSDC.transfer(msg.sender, cUsdcAmountToTransfer);
 
-        if (!checkTransfer) {
-            revert("cUSDC transfer from Contract to User failed");
+        if (!ok) {
+            revert Errors.CUsdcTransferToUserFailed();
         }
 
         // Final checks
+        _verifyFinalState(initialUsdcBalance, initialCUsdcBalance);
+    }
+
+    /*
+     * Checks that the contract did not change its balance in any of the tokens.
+     */
+    function _verifyFinalState(
+        uint256 initialUsdcBalance,
+        uint256 initialCUsdcBalance
+    ) internal view {
         uint256 finalUsdcBalance = uSDC.balanceOf(address(this));
 
         if (finalUsdcBalance != initialUsdcBalance) {
-            revert(
-                "Final Usdc balance and initial usdc balance should be equal"
-            );
+            revert Errors.InvalidState();
         }
 
         uint256 finalCUsdcBalance = cUSDC.balanceOf(address(this));
 
         if (finalCUsdcBalance != initialCUsdcBalance) {
-            revert(
-                "Final cUSDC balance and initial USDC balance should be equal"
-            );
+            revert Errors.InvalidState();
         }
     }
 

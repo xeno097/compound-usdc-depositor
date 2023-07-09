@@ -5,11 +5,12 @@ import "forge-std/Test.sol";
 import {CompundUsdcDepositor} from "src/CompundUsdcDepositor.sol";
 import {Errors} from "src/libs/Errors.sol";
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {CometMainInterface} from "lib/comet/contracts/CometInterface.sol";
 
 contract CompoundDepositorDepositTests is Test {
     CompundUsdcDepositor instance;
-    address usdcContractAddress = address(97);
-    address cUsdcContractAddres = address(666);
+    address constant usdcContractAddress = address(97);
+    address constant cUsdcContractAddres = address(666);
 
     function setUp() public {
         instance = new CompundUsdcDepositor(
@@ -63,7 +64,8 @@ contract CompoundDepositorDepositTests is Test {
         address targetContract,
         address from,
         address to,
-        uint256 amount
+        uint256 amount,
+        bool ret
     ) internal {
         vm.mockCall(
             targetContract,
@@ -73,10 +75,53 @@ contract CompoundDepositorDepositTests is Test {
                 to,
                 amount
             ),
-            abi.encode(false)
+            abi.encode(ret)
         );
     }
 
+    function mockERC20ApproveCall(
+        address targetContract,
+        address spender,
+        uint256 amount,
+        bool ret
+    ) internal {
+        vm.mockCall(
+            targetContract,
+            abi.encodeWithSelector(IERC20.approve.selector, spender, amount),
+            abi.encode(ret)
+        );
+    }
+
+    function mockCometTokenSupplyCall(
+        address targetContract,
+        address token,
+        uint256 amount
+    ) internal {
+        vm.mockCall(
+            targetContract,
+            abi.encodeWithSelector(
+                CometMainInterface.supply.selector,
+                token,
+                amount
+            ),
+            abi.encode()
+        );
+    }
+
+    function mockERC20TokenTransferCall(
+        address targetContract,
+        address to,
+        uint256 amount,
+        bool ret
+    ) internal {
+        vm.mockCall(
+            targetContract,
+            abi.encodeWithSelector(IERC20.transfer.selector, to, amount),
+            abi.encode(ret)
+        );
+    }
+
+    // TESTS
     function testCannotDepositIfUserDidNotSetUsdcAllowance(
         uint256 amount
     ) external {
@@ -115,10 +160,93 @@ contract CompoundDepositorDepositTests is Test {
             usdcContractAddress,
             address(this),
             address(instance),
-            amount
+            amount,
+            false
         );
 
         vm.expectRevert(Errors.UsdcTransferFailed.selector);
+
+        instance.deposit(amount);
+    }
+
+    function testCannotDepositIfCUsdcApprovalFails(uint256 amount) external {
+        amount = bound(amount, 1, type(uint256).max);
+
+        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
+        mockERC20BalanceOfCall(cUsdcContractAddres, address(instance));
+
+        mockERC20AllowanceCall(
+            usdcContractAddress,
+            address(this),
+            address(instance),
+            amount
+        );
+
+        mockERC20TransferFromCall(
+            usdcContractAddress,
+            address(this),
+            address(instance),
+            amount,
+            true
+        );
+
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            cUsdcContractAddres,
+            amount,
+            false
+        );
+
+        vm.expectRevert(Errors.CUsdcApprovalFailed.selector);
+
+        instance.deposit(amount);
+    }
+
+    function testCannotDepositIfCUsdcTransferToUserFails(
+        uint256 amount
+    ) external {
+        amount = bound(amount, 1, type(uint256).max);
+
+        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
+        mockERC20BalanceOfCall(cUsdcContractAddres, address(instance));
+
+        mockERC20AllowanceCall(
+            usdcContractAddress,
+            address(this),
+            address(instance),
+            amount
+        );
+
+        mockERC20TransferFromCall(
+            usdcContractAddress,
+            address(this),
+            address(instance),
+            amount,
+            true
+        );
+
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            cUsdcContractAddres,
+            amount,
+            true
+        );
+
+        mockCometTokenSupplyCall(
+            cUsdcContractAddres,
+            usdcContractAddress,
+            amount
+        );
+
+        mockERC20TokenTransferCall(
+            cUsdcContractAddres,
+            address(this),
+            // TODO use another value
+            0,
+            false
+        );
+
+        vm.expectRevert(Errors.CUsdcTransferToUserFailed.selector);
 
         instance.deposit(amount);
     }
