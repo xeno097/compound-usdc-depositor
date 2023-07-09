@@ -6,7 +6,7 @@ import {CometInterface} from "lib/comet/contracts/CometInterface.sol";
 import "forge-std/console.sol";
 import {Errors} from "src/libs/Errors.sol";
 
-contract CompundUsdcDepositor {
+contract CompoundUsdcDepositor {
     uint256 public number;
     CometInterface cUSDC;
     IERC20 uSDC;

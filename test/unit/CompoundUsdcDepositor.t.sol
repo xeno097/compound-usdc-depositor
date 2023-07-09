@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import {CompundUsdcDepositor} from "src/CompundUsdcDepositor.sol";
+import {CompoundUsdcDepositor} from "src/CompoundUsdcDepositor.sol";
 import {Errors} from "src/libs/Errors.sol";
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {CometMainInterface} from "lib/comet/contracts/CometInterface.sol";
@@ -10,7 +10,7 @@ import {ERC20Mock} from "test/mocks/ERC20Mock.sol";
 import {CTokenMock} from "test/mocks/cTokenMock.sol";
 
 contract CompoundDepositorDepositTests is Test {
-    CompundUsdcDepositor instance;
+    CompoundUsdcDepositor instance;
     address usdcContractAddress;
     address compoundUsdcContractAddres;
     ERC20Mock usdcContractMock;
@@ -22,7 +22,7 @@ contract CompoundDepositorDepositTests is Test {
         usdcContractAddress = address(usdcContractMock);
         compoundUsdcContractAddres = address(cUsdcContractMock);
 
-        instance = new CompundUsdcDepositor(
+        instance = new CompoundUsdcDepositor(
             usdcContractAddress,
             compoundUsdcContractAddres
         );

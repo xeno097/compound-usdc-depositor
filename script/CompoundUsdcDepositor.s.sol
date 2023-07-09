@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import {CompundUsdcDepositor} from "src/CompundUsdcDepositor.sol";
+import {CompoundUsdcDepositor} from "src/CompoundUsdcDepositor.sol";
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "forge-std/console.sol";
 
@@ -19,7 +19,7 @@ contract DeployCompoundUsdcDepositor is Script {
 
         vm.startBroadcast(priv_key);
 
-        CompundUsdcDepositor instance = new CompundUsdcDepositor(
+        CompoundUsdcDepositor instance = new CompoundUsdcDepositor(
             usdcAddress,
             cUsdcAddress
         );
