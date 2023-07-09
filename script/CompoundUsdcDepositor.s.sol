@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 
 import {CometInterface} from "lib/comet/contracts/CometInterface.sol";
 
-contract DeployCompundUsdcDepositor is Script {
+contract DeployCompoundUsdcDepositor is Script {
     function setUp() public {}
 
     function run() public {
