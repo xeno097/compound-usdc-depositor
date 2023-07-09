@@ -16,8 +16,8 @@ contract ERC20Mock is IERC20 {
 
     function totalSupply() external view override returns (uint256) {}
 
-    function setUpdateBalance(bool _updateBalance) external {
-        updateBalance = _updateBalance;
+    function setUpdateBalance(bool newValue) external {
+        updateBalance = newValue;
     }
 
     function balanceOf(address) external view override returns (uint256) {
@@ -47,6 +47,7 @@ contract ERC20Mock is IERC20 {
             balanceReturnValue = 0;
         }
 
+        transferCalls++;
         return ret;
     }
 

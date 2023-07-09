@@ -12,7 +12,7 @@ import {CTokenMock} from "test/mocks/cTokenMock.sol";
 contract CompoundDepositorDepositTests is Test {
     CompundUsdcDepositor instance;
     address usdcContractAddress;
-    address cUsdcContractAddres;
+    address compoundUsdcContractAddres;
     ERC20Mock usdcContractMock;
     CTokenMock cUsdcContractMock;
 
@@ -20,11 +20,11 @@ contract CompoundDepositorDepositTests is Test {
         usdcContractMock = new ERC20Mock();
         cUsdcContractMock = new CTokenMock();
         usdcContractAddress = address(usdcContractMock);
-        cUsdcContractAddres = address(cUsdcContractMock);
+        compoundUsdcContractAddres = address(cUsdcContractMock);
 
         instance = new CompundUsdcDepositor(
             usdcContractAddress,
-            cUsdcContractAddres
+            compoundUsdcContractAddres
         );
     }
 
@@ -137,7 +137,7 @@ contract CompoundDepositorDepositTests is Test {
         amount = bound(amount, 1, type(uint256).max);
 
         mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(cUsdcContractAddres, address(instance));
+        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
 
         mockERC20AllowanceCall(
             usdcContractAddress,
@@ -156,7 +156,7 @@ contract CompoundDepositorDepositTests is Test {
         amount = bound(amount, 1, type(uint256).max);
 
         mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(cUsdcContractAddres, address(instance));
+        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
 
         mockERC20AllowanceCall(
             usdcContractAddress,
@@ -182,7 +182,7 @@ contract CompoundDepositorDepositTests is Test {
         amount = bound(amount, 1, type(uint256).max);
 
         mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(cUsdcContractAddres, address(instance));
+        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
 
         mockERC20AllowanceCall(
             usdcContractAddress,
@@ -201,7 +201,7 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             false
         );
@@ -217,7 +217,7 @@ contract CompoundDepositorDepositTests is Test {
         amount = bound(amount, 1, type(uint256).max);
 
         mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(cUsdcContractAddres, address(instance));
+        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
 
         mockERC20AllowanceCall(
             usdcContractAddress,
@@ -236,14 +236,14 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             true
         );
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             0,
             false
         );
@@ -277,20 +277,30 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             true
         );
 
-        mockERC20ApproveCall(usdcContractAddress, cUsdcContractAddres, 0, true);
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            compoundUsdcContractAddres,
+            0,
+            true
+        );
 
         mockCometTokenSupplyCall(
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             usdcContractAddress,
             amount
         );
 
-        mockERC20ApproveCall(usdcContractAddress, cUsdcContractAddres, 0, true);
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            compoundUsdcContractAddres,
+            0,
+            true
+        );
 
         vm.expectRevert(Errors.InvalidState.selector);
 
@@ -323,12 +333,17 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             true
         );
 
-        mockERC20ApproveCall(usdcContractAddress, cUsdcContractAddres, 0, true);
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            compoundUsdcContractAddres,
+            0,
+            true
+        );
 
         vm.expectRevert(Errors.CUsdcTransferToUserFailed.selector);
 
@@ -352,12 +367,17 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             true
         );
 
-        mockERC20ApproveCall(usdcContractAddress, cUsdcContractAddres, 0, true);
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            compoundUsdcContractAddres,
+            0,
+            true
+        );
 
         cUsdcContractMock.setTrasferReturnValueOnce(true);
 
@@ -392,12 +412,17 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             true
         );
 
-        mockERC20ApproveCall(usdcContractAddress, cUsdcContractAddres, 0, true);
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            compoundUsdcContractAddres,
+            0,
+            true
+        );
 
         cUsdcContractMock.setTrasferReturnValueOnce(true);
 
@@ -431,12 +456,17 @@ contract CompoundDepositorDepositTests is Test {
 
         mockERC20ApproveCall(
             usdcContractAddress,
-            cUsdcContractAddres,
+            compoundUsdcContractAddres,
             amount,
             true
         );
 
-        mockERC20ApproveCall(usdcContractAddress, cUsdcContractAddres, 0, true);
+        mockERC20ApproveCall(
+            usdcContractAddress,
+            compoundUsdcContractAddres,
+            0,
+            true
+        );
 
         cUsdcContractMock.setTrasferReturnValueOnce(true);
 
