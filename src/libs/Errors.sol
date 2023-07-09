@@ -18,6 +18,11 @@ library Errors {
     error CUsdcApprovalFailed();
 
     /*
+     * @dev Thrown when approval reset for cUSDC contract to move USDC tokens fails.
+     */
+    error CUsdcApprovalResetFailed();
+
+    /*
      * @dev Thrown when tranfer of cUSDC tokens to the User fails.
      */
     error CUsdcTransferToUserFailed();
