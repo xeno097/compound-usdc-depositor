@@ -98,6 +98,16 @@ contract CompoundUsdcDepositor {
         uint256 initialUsdcBalance = uSDC.balanceOf(address(this));
         uint256 initialCUsdcBalance = cUSDC.balanceOf(address(this));
 
+        _executeWithdraw(amount, initialCUsdcBalance);
+
+        // Final checks
+        _verifyFinalState(initialUsdcBalance, initialCUsdcBalance);
+    }
+
+    function _executeWithdraw(
+        uint256 amount,
+        uint256 initialCUsdcBalance
+    ) internal {
         // MAYBE CREATE A FUNCTION FOR THIS
         uint256 approvedAmount = cUSDC.allowance(msg.sender, address(this));
 
@@ -122,9 +132,6 @@ contract CompoundUsdcDepositor {
         uint256 amountToWithDraw = newCUsdcBalance - initialCUsdcBalance;
 
         cUSDC.withdrawTo(msg.sender, address(uSDC), amountToWithDraw);
-
-        // Final checks
-        _verifyFinalState(initialUsdcBalance, initialCUsdcBalance);
     }
 
     /*
