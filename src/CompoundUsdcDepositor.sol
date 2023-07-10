@@ -7,7 +7,6 @@ import "forge-std/console.sol";
 import {Errors} from "src/libs/Errors.sol";
 
 contract CompoundUsdcDepositor {
-    uint256 public number;
     CometInterface cUSDC;
     IERC20 uSDC;
     mapping(address => uint256) cUsdcPerAddress;
@@ -17,29 +16,30 @@ contract CompoundUsdcDepositor {
         cUSDC = CometInterface(_cUcdc);
     }
 
-    /// Allows `msg.sender` to deposit `amount` of tokens into the compound protocol and receive cTokens in exchange.
-    ///
-    /// @param amount The amount of tokens to be deposited into the compound protocol.
+    /*
+     * Returns the amount of cUSDC tokens that `account` can use to reedem USDC from the compound protocol.
+     *
+     * @param account the address of the user which cUSDC tokens balance is to be inspected.
+     */
+    function balanceOf(address account) external view returns (uint256) {
+        return cUsdcPerAddress[account];
+    }
+
+    /*
+     * Allows `msg.sender` to deposit `amount` of tokens into the compound protocol and receive cTokens in exchange.
+     *
+     * @param amount The amount of tokens to be deposited into the compound protocol.
+     */
+    // TODO: update this logic using supplyFrom instead of supply to save gas and operations
     function deposit(uint256 amount) external {
         // Checkpoint values
         uint256 initialUsdcBalance = uSDC.balanceOf(address(this));
         uint256 initialCUsdcBalance = cUSDC.balanceOf(address(this));
 
-        uint256 approvedAmount = uSDC.allowance(msg.sender, address(this));
-
-        if (approvedAmount < amount) {
-            revert Errors.NotEnoughAllowanceApproved();
-        }
-
-        // Deposit `msg.sender` USDC into this contract account.
-        bool ok = uSDC.transferFrom(msg.sender, address(this), amount);
-
-        if (!ok) {
-            revert Errors.UsdcTransferFailed();
-        }
+        _checkApprovalAndTransferFromSender(uSDC, amount);
 
         // Approve the cUSDC contract to transfer USDC to the compound protocol contract.
-        ok = uSDC.approve(address(cUSDC), amount);
+        bool ok = uSDC.approve(address(cUSDC), amount);
 
         if (!ok) {
             revert Errors.CUsdcApprovalFailed();
@@ -72,8 +72,62 @@ contract CompoundUsdcDepositor {
             revert Errors.CUsdcTransferToUserFailed();
         }
 
-        // Final checks
         _verifyFinalState(initialUsdcBalance, initialCUsdcBalance);
+    }
+
+    function withdraw(uint256 amount) external {
+        if (amount > cUsdcPerAddress[msg.sender]) {
+            revert Errors.InvalidWithdrawAmount();
+        }
+
+        cUsdcPerAddress[msg.sender] -= amount;
+
+        uint256 initialUsdcBalance = uSDC.balanceOf(address(this));
+        uint256 initialCUsdcBalance = cUSDC.balanceOf(address(this));
+
+        _executeWithdraw(amount, initialCUsdcBalance);
+
+        _verifyFinalState(initialUsdcBalance, initialCUsdcBalance);
+    }
+
+    function _executeWithdraw(
+        uint256 amount,
+        uint256 initialCUsdcBalance
+    ) internal {
+        _checkApprovalAndTransferFromSender(IERC20(address(cUSDC)), amount);
+
+        uint256 newCUsdcBalance = cUSDC.balanceOf(address(this));
+
+        if (newCUsdcBalance <= initialCUsdcBalance) {
+            revert Errors.InvalidState();
+        }
+
+        uint256 amountToWithDraw = newCUsdcBalance - initialCUsdcBalance;
+
+        cUSDC.withdrawTo(msg.sender, address(uSDC), amountToWithDraw);
+    }
+
+    /*
+     * Checks that `msg.sender` set at least `amount` of allowance for `from` and transfers `amount` of tokens to this conract account.
+     *
+     * @param from The ERC20 from which transfer the token
+     * @param amount The amount of ERC20 to be trasnfered to this contract
+     */
+    function _checkApprovalAndTransferFromSender(
+        IERC20 from,
+        uint256 amount
+    ) internal {
+        uint256 approvedAmount = from.allowance(msg.sender, address(this));
+
+        if (approvedAmount < amount) {
+            revert Errors.NotEnoughAllowanceApproved();
+        }
+
+        bool ok = from.transferFrom(msg.sender, address(this), amount);
+
+        if (!ok) {
+            revert Errors.UsdcTransferFailed();
+        }
     }
 
     /*
@@ -94,33 +148,5 @@ contract CompoundUsdcDepositor {
         if (finalCUsdcBalance != initialCUsdcBalance) {
             revert Errors.InvalidState();
         }
-    }
-
-    function withdraw(uint256 amount) external {
-        uint256 balance = cUSDC.balanceOf(address(this));
-
-        console.log(
-            "CONTRACT cUSDC BALANCE IS",
-            balance,
-            "USDC BALANCE IS",
-            uSDC.balanceOf(address(this))
-        );
-
-        cUSDC.withdraw(address(uSDC), amount);
-
-        console.log("SUCCESFULLY WITHDRWAN cUSDC", balance);
-
-        uint256 usdcBalance = uSDC.balanceOf(address(this));
-
-        console.log(
-            "CONTRACT USDC BALANCE IS",
-            usdcBalance,
-            "cUSDC BALANCE IS",
-            cUSDC.balanceOf(address(this))
-        );
-
-        bool check = uSDC.transfer(msg.sender, usdcBalance);
-
-        require(check, "USDC WITHDRAWAL TO USER FAILED");
     }
 }

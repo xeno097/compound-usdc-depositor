@@ -31,4 +31,9 @@ library Errors {
      * @dev Thrown when after checking the contract state an anomaly is found.
      */
     error InvalidState();
+
+    /*
+     * @dev Thrown when `msg.sender` tries to withdraw USDC with an invalid cUSDC amount.
+     */
+    error InvalidWithdrawAmount();
 }
