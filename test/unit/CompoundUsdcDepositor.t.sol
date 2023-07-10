@@ -387,7 +387,7 @@ contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
                         // Mapping Key
                         account,
                         // Storage Slot of the mapping
-                        3
+                        2
                     )
                 )
             ),
