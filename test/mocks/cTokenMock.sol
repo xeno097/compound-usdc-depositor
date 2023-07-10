@@ -5,13 +5,15 @@ import {ERC20Mock} from "./ERC20Mock.sol";
 import {CometInterface} from "lib/comet/contracts/CometInterface.sol";
 
 contract CTokenMock is ERC20Mock {
-    function supply(address, uint256) external {
+    function supplyFrom(address, address, address, uint256) external {
         _maybeUpdateBalance();
     }
 
-    function withdrawTo(address, address, uint256) external {
+    function withdrawFrom(address, address, address, uint256) external {
         if (resetBalanceAfterTransfer) {
             balanceReturnValue = 0;
         }
+
+        _maybeUpdateBalance();
     }
 }

@@ -43,7 +43,7 @@ contract CompoundDepositorDepositTests is BaseCompoundDepositorTests {
         mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
 
         mockERC20AllowanceCall(
-            usdcContractAddress,
+            compoundUsdcContractAddres,
             senderAddress,
             address(instance)
         );
@@ -53,281 +53,19 @@ contract CompoundDepositorDepositTests is BaseCompoundDepositorTests {
         instance.deposit(amount);
     }
 
-    function testCannotDepositIfUsdcTransferFromSenderToContractFails(
+    function testCannotDepositIfContractCUsdcBalanceChangesAfterInteractions(
         uint256 amount
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
-
         mockERC20AllowanceCall(
-            usdcContractAddress,
+            compoundUsdcContractAddres,
             senderAddress,
             address(instance),
             amount
         );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            false
-        );
-
-        vm.expectRevert(Errors.UsdcTransferFailed.selector);
-
-        instance.deposit(amount);
-    }
-
-    function testCannotDepositIfCUsdcApprovalFails(uint256 amount) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
-
-        mockERC20AllowanceCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            false
-        );
-
-        vm.expectRevert(Errors.CUsdcApprovalFailed.selector);
-
-        instance.deposit(amount);
-    }
-
-    function testCannotDepositIfCUsdcApprovalResetFails(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
-
-        mockERC20AllowanceCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            false
-        );
-
-        vm.expectRevert(Errors.CUsdcApprovalResetFailed.selector);
-
-        instance.deposit(amount);
-    }
-
-    function testCannotDepositIfCUsdcContractBalanceDidNotIncrease(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-
-        mockERC20AllowanceCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            true
-        );
-
-        mockCometTokenSupplyCall(
-            compoundUsdcContractAddres,
-            usdcContractAddress,
-            amount
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            true
-        );
-
-        vm.expectRevert(Errors.InvalidState.selector);
-
-        instance.deposit(amount);
-    }
-
-    function testCannotDepositIfCUsdcTransferToUserFails(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
 
         cUsdcContractMock.setUpdateBalance(true);
-
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-
-        mockERC20AllowanceCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            true
-        );
-
-        vm.expectRevert(Errors.CUsdcTransferToUserFailed.selector);
-
-        instance.deposit(amount);
-    }
-
-    function testCannotDepositIfContractUsdcBalanceChangesAfterInteractions(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        cUsdcContractMock.setUpdateBalance(true);
-        usdcContractMock.setUpdateBalance(true);
-
-        mockERC20AllowanceCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            true
-        );
-
-        cUsdcContractMock.setTrasferReturnValueOnce(true);
-
-        vm.expectRevert(Errors.InvalidState.selector);
-
-        instance.deposit(amount);
-    }
-
-    function testCannotDepositIfContractCusdcBalanceChangesAfterInteractions(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        cUsdcContractMock.setUpdateBalance(true);
-
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
-
-        mockERC20AllowanceCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            true
-        );
-
-        cUsdcContractMock.setTrasferReturnValueOnce(true);
 
         vm.expectRevert(Errors.InvalidState.selector);
 
@@ -337,129 +75,26 @@ contract CompoundDepositorDepositTests is BaseCompoundDepositorTests {
     function testDeposit(uint256 amount) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        cUsdcContractMock.setUpdateBalance(true);
-        cUsdcContractMock.setResetBalaceAfterTransfer(true);
-
-        mockERC20BalanceOfCall(usdcContractAddress, address(instance));
+        mockERC20BalanceOfCall(compoundUsdcContractAddres, address(instance));
 
         mockERC20AllowanceCall(
-            usdcContractAddress,
+            compoundUsdcContractAddres,
             senderAddress,
             address(instance),
             amount
         );
-
-        mockERC20TransferFromCall(
-            usdcContractAddress,
-            senderAddress,
-            address(instance),
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            amount,
-            true
-        );
-
-        mockERC20ApproveCall(
-            usdcContractAddress,
-            compoundUsdcContractAddres,
-            0,
-            true
-        );
-
-        cUsdcContractMock.setTrasferReturnValueOnce(true);
 
         instance.deposit(amount);
     }
 }
 
 contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
-    function _setCUsdcMappingValue(address account, uint256 amount) internal {
-        writeToStorage(
-            address(instance),
-            bytes32(
-                keccak256(
-                    abi.encode(
-                        // Mapping Key
-                        account,
-                        // Storage Slot of the mapping
-                        2
-                    )
-                )
-            ),
-            bytes32(amount),
-            0
-        );
-    }
-
-    function testCannotWithdrawIfSenderExceedsHisWithdrawAmount(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        vm.expectRevert(Errors.InvalidWithdrawAmount.selector);
-
-        instance.withdraw(amount);
-    }
-
     function testCannotWithdrawIfUserDidNotSetEnoughCUsdcAllowance(
         uint256 amount
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        _setCUsdcMappingValue(senderAddress, amount);
-
         vm.expectRevert(Errors.NotEnoughAllowanceApproved.selector);
-
-        instance.withdraw(amount);
-    }
-
-    function testCannotWithdrawIfCUsdcTransferFromUserFails(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        _setCUsdcMappingValue(senderAddress, amount);
-
-        mockERC20AllowanceCall(
-            compoundUsdcContractAddres,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        mockERC20TransferFromCall(
-            compoundUsdcContractAddres,
-            senderAddress,
-            address(instance),
-            amount,
-            false
-        );
-
-        vm.expectRevert(Errors.UsdcTransferFailed.selector);
-
-        instance.withdraw(amount);
-    }
-
-    function testCannotWithdrawIfContractCUsdcBalanceDidNotIncrease(
-        uint256 amount
-    ) external {
-        amount = bound(amount, 1, type(uint256).max);
-
-        _setCUsdcMappingValue(senderAddress, amount);
-
-        mockERC20AllowanceCall(
-            compoundUsdcContractAddres,
-            senderAddress,
-            address(instance),
-            amount
-        );
-
-        vm.expectRevert(Errors.InvalidState.selector);
 
         instance.withdraw(amount);
     }
@@ -469,8 +104,6 @@ contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
     ) external {
         amount = bound(amount, 1, type(uint256).max);
 
-        _setCUsdcMappingValue(senderAddress, amount);
-
         mockERC20AllowanceCall(
             compoundUsdcContractAddres,
             senderAddress,
@@ -485,32 +118,8 @@ contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
         instance.withdraw(amount);
     }
 
-    // TODO: create this scenario
-    //     function testCannotWithdrawIfUsdcBalanceChangedAfterInteractions(
-    //     uint256 amount
-    // ) external {
-    //     amount = bound(amount, 1, type(uint256).max);
-
-    //     _setCUsdcMappingValue(senderAddress, amount);
-
-    //     mockERC20AllowanceCall(
-    //         compoundUsdcContractAddres,
-    //         senderAddress,
-    //         address(instance),
-    //         amount
-    //     );
-
-    //     cUsdcContractMock.setUpdateBalance(true);
-
-    //     vm.expectRevert(Errors.InvalidState.selector);
-
-    //     instance.withdraw(amount);
-    // }
-
     function testWithdraw(uint256 amount) external {
         amount = bound(amount, 1, type(uint256).max);
-
-        _setCUsdcMappingValue(senderAddress, amount);
 
         mockERC20AllowanceCall(
             compoundUsdcContractAddres,
@@ -518,9 +127,6 @@ contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
             address(instance),
             amount
         );
-
-        cUsdcContractMock.setUpdateBalance(true);
-        cUsdcContractMock.setResetBalaceAfterTransfer(true);
 
         instance.withdraw(amount);
 
