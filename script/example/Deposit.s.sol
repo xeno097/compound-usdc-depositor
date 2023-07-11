@@ -48,9 +48,12 @@ contract DepositExample is Script {
             IERC20(cUsdcAddress).balanceOf(deployerAddress)
         );
 
-        // Before depositing the user must approve the contract to move the usdc otherwise the deposit will fail
+        // Before depositing the user must allow the contract to move his funds through the cUSDC contract and...
+        CometInterface(cUsdcAddress).allow(address(instance), true);
+
+        // ...approve the cUSDC contract to tranfer from the USDC contract.
         bool ok = IERC20(usdcAddress).approve(
-            address(instance),
+            address(cUsdcAddress),
             usdcDepositAmount
         );
 
@@ -59,6 +62,9 @@ contract DepositExample is Script {
         }
 
         instance.deposit(usdcDepositAmount);
+
+        // Reset permission
+        CometInterface(cUsdcAddress).allow(address(instance), false);
 
         console.log("AFTER DEPOSIT");
 

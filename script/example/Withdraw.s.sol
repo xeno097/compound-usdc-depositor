@@ -6,6 +6,8 @@ import {CompoundUsdcDepositor} from "src/CompoundUsdcDepositor.sol";
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "forge-std/console.sol";
 
+import {CometInterface} from "lib/comet/contracts/CometInterface.sol";
+
 contract WithdrawExample is Script {
     uint256 privKey;
     address deployerAddress;
@@ -46,17 +48,13 @@ contract WithdrawExample is Script {
             IERC20(cUsdcAddress).balanceOf(deployerAddress)
         );
 
-        // Before executing the withdrawal the user must approve the CompoundUsdcDepositor instance to move the funds.
-        bool ok = IERC20(cUsdcAddress).approve(
-            address(instance),
-            type(uint256).max
-        );
-
-        if (!ok) {
-            revert("Approval failed");
-        }
+        // Before depositing the user must allow the contract to move his funds through the cUSDC contract.
+        CometInterface(cUsdcAddress).allow(address(instance), true);
 
         instance.withdraw(cUsdcWithdrawAmount);
+
+        // Reset permission
+        CometInterface(cUsdcAddress).allow(address(instance), false);
 
         console.log("AFTER WITHDRAWAL");
 
