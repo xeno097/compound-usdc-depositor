@@ -135,3 +135,59 @@ contract CompoundDepositorWithDrawTests is BaseCompoundDepositorTests {
         assertEq(finalBalance, 0);
     }
 }
+
+contract CompoundDepositorSetUsdcContractAddressTests is
+    BaseCompoundDepositorTests
+{
+    function testCannotSetUsdcContractAddress(
+        address notOwnerAccount,
+        address newTokenAddress
+    ) external {
+        vm.assume(
+            notOwnerAccount != address(this) && newTokenAddress != address(0)
+        );
+
+        vm.prank(notOwnerAccount);
+
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        instance.setUsdcContractAddress(newTokenAddress);
+    }
+
+    function testSetUsdcContractAddress(address newTokenAddress) external {
+        vm.assume(newTokenAddress != address(0));
+
+        instance.setUsdcContractAddress(newTokenAddress);
+
+        address res = instance.uSDCAddress();
+        assertEq(res, newTokenAddress);
+    }
+}
+
+contract CompoundDepositorSetCUsdcContractAddressTests is
+    BaseCompoundDepositorTests
+{
+    function testCannotSetCUsdcContractAddressIfSenderIsNotTheOwner(
+        address notOwnerAccount,
+        address newTokenAddress
+    ) external {
+        vm.assume(
+            notOwnerAccount != address(this) && newTokenAddress != address(0)
+        );
+
+        vm.prank(notOwnerAccount);
+
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        instance.setCUsdcContractAddress(newTokenAddress);
+    }
+
+    function testSetCUsdcContractAddress(address newTokenAddress) external {
+        vm.assume(newTokenAddress != address(0));
+
+        instance.setCUsdcContractAddress(newTokenAddress);
+
+        address res = instance.cUSDCAddress();
+        assertEq(res, newTokenAddress);
+    }
+}
